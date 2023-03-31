@@ -1,13 +1,12 @@
 
 const express = require('express')
-
-var io = require('socket.io')
-({
-  path: '/io/webrtc'
-})
+const cors = require('cors');
 
 const app = express()
-const port = 8082
+const http = require('http');
+const server = http.createServer(app);
+const io = require('socket.io')(server, {  path: '/io/webrtc' });
+const port = 8080
 
 const rooms = {}
 const messages = {}
@@ -15,15 +14,18 @@ const messages = {}
 // app.get('/', (req, res) => res.send('Hello World!!!!!'))
 
 //https://expressjs.com/en/guide/writing-middleware.html
-app.use(express.static(__dirname + '/build'))
+// app.use(express.static(__dirname + '/build'))
+app.use(express.json())
+app.use(express.urlencoded({ extended: false }));
+app.use(cors());
 app.get('/', (req, res, next) => { //default room
-    res.sendFile(__dirname + '/build/index.html')
+    res.send('IT4995')
 })
 
-app.get('/:room', (req, res, next) => {
-  res.sendFile(__dirname + '/build/index.html')
-  // res.status(200).json({data: 'test'})
-})
+// app.get('/:room', (req, res, next) => {
+//   res.sendFile(__dirname + '/build/index.html')
+//   // res.status(200).json({data: 'test'})
+// })
 
 // ************************************* //
 // ************************************* //
@@ -38,7 +40,7 @@ app.post('/:room', (req, res, next) => {
 //   res.status(200).json({data: 'test'})
 // })
 
-const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+server.listen(port, () => console.log(`Example app listening on port ${port}!`))
 
 io.listen(server)
 
