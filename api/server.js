@@ -19,7 +19,7 @@ app.use('/public', express.static(__dirname + '/webview'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
-
+console.log('dirname', __dirname);
 // connect to MongoDB
 const url = process.env.mongoURI;
 mongoose.connect(url,

@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "product-upload-facebook-media",
+  "private_key_id": "458378a2ce3f1032527d99fd5d730d0fc04a722c",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEuwIBADANBgkqhkiG9w0BAQEFAASCBKUwggShAgEAAoIBAQCzwejMiiLcUCTi\nKj3s+NQlJGyGGMiJdJmrafQjvvWfYN40i4ZdsoB9U5VH5yEg+hDUwvYnUVZSHUYT\nedYQN/u7efMlkdQ8CIyREnp2iOXVTRW3C2mHytlLKyeBcKJVjn6pWyodTZBSQal0\neW+3Z/eh83tvtdxrWqlHVH7Le4YXJcjDiU13KK+4ydxc1B85E6ZUi4ynOiIGF116\nxW9leEjMfHLh/6jnWJDdWPCpMf5inh7haXVPd2IHSc8I1f5LgU6amLnArYhK7iXs\nSDqX/tXd7Vy8FR5LD4+bFdZTT25jR1Rvu4x2VkfNH1097c5yTm4rYsp/51mtx4Fk\nnYiNi+bLAgMBAAECgf9zmruXOuAwjo/obLlU1FL0cl2Uetjct2q3doGJjYRvn0Td\nVn63LrkCnzKO/JwBVNFgeqiYaxMtkmqB2oLfqd/q2M1UKYPycTm6EuO7RepOLqdC\niykyk8hPD2jqo2qZiYq8VBGa8H+t5AO6sfNfjG6yteEaxDz6hlDsefymS8egbaYa\nMezjxuvWvRNnSIJ/iFSDm7DJmR7BIsRy7Z8LEAw9lETaR2nmIzRWRrqd/907HQe6\nqmDu/KuZfrb0xsHT59JzLOy+g6F5rduR8vWU8uwZAfiixrPxOC7LZjG6VF+pwGvC\n3vWtuzhGkZ7LvUV/4ZIiUAhR1cDClCeDxttQXckCgYEA64+In7iyZJrZUECuy+uc\nQUb8CETHCnYt3noX9qHFEi6SriuJmPznCZ4jQt9Zhcjkdd5KWgzFr9JBfsgdvwU5\nekxjautV59ftWWqMXAYNplhYMEI+HjahW3EnEiZxNMHh6MRFIc+oNhg7XpV266GH\nZzASlyVsvcc/34AxGU5WvVMCgYEAw1rUNlFgOM1cKvpyOsgvNrHYK9gxK4RgabeC\ndTX9Rg5bPn/pF1wEYQdH6OVoDufwi0L8AfBGltfuyJTTTqllt99zoIAwMGKljcKQ\nLXqidROtQhNkNKSwHHTt3JXJnkuXOlg3/DF+S8UYAtP8MkTZ5vlTKPNNKyXtnLh4\nAcq7CakCgYAksNa3Ci2/Pd9bgLe5S5mrEUNwhkX6ey3p2VqiL9BiZJ60QlPMYJgc\nB2W2pNNs4z2ynk02eYbRPA63kLQRbN7nDb7uiHl5A0kVBGOYcdjucBRMcAT878Vy\nWM2dJh+79/cYKnoaKh4pTtzwfpdnXGGa0QIUSOAHL2HjjjQXnPwlwQKBgGg5jGDS\nd6i2f8b6SXltFitzJOb3d/xEqv+cBYEtZcw7mpi0u5JX6IovzUDHLAZP3nkeKr+K\nBs8xs1bWeApOvFMmZ1UpLwyRhMwmErAA7q3R6q0HFX40ozT7eXAnhiLrJ2rcaDon\n2b7pD49qs/HJ5Auj16dQb0pm+OeVT4l9NN7JAoGBAJT36xvBO/b/2HpZB+3f0qQ6\nVNY7VLVe/aW58KEm1MrbqrP5B0MqFPcE0FpesT3VSeZSCldDkBgjJOJE4n3YMvpz\nCzDuzdGX7ZlaS5Ri6Y5Pw+YGoCpaEpRDUnewg4y+9tmeIUeaXyKfl1jhg7m32eDf\nybZcMWkN9PO7VJhsbNS8\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-lwj2i@product-upload-facebook-media.iam.gserviceaccount.com",
+  "client_id": "112209819164721818887",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-lwj2i%40product-upload-facebook-media.iam.gserviceaccount.com"
+}
