@@ -51,7 +51,8 @@ router.post ('/get_user_info', async (req, res) => {
     country: null,
     listing: null,
     is_friend: null,
-    online: null
+    online: null,
+    phoneNumber: null
   }
   try {
     user = await User.findById(user_id);
@@ -61,7 +62,6 @@ router.post ('/get_user_info', async (req, res) => {
       if (index >= 0) return callRes(res, responseError.USER_IS_NOT_VALIDATED, 'bị block rồi em ơi, khổ quá');
       let index1 = tokenUser.blockedList.findIndex(element => element.user._id.equals(user.id));
       if (index1 >= 0) return callRes(res, responseError.USER_IS_NOT_VALIDATED, 'bị block rồi em ơi, khổ quá');
-
     }
     data.id = user._id.toString();
     data.username = user.name;
@@ -76,6 +76,7 @@ router.post ('/get_user_info', async (req, res) => {
     data.birthday = validTime.timeToSecond(user.birthday);
     data.listing = user.friends.length;
     data.is_friend = false;
+    data.phoneNumber = user.phoneNumber;
     if (tokenUser && user_id != tokenUser.id) {
       let indexExist = user.friends.findIndex(element => element.friend._id.equals(tokenUser.id)); 
       data.is_friend =  (indexExist >= 0) ? true : false;
@@ -92,6 +93,7 @@ router.post('/set_user_info', cpUpload, verify, async (req, res) => {
   let fileAvatar, fileCoverImage, linkAvatar, linkCoverImage;
   let user, promise1, promise2, inputError;
   if (req.files){
+    console.log('req.files.avatar', req.files.avatar);
     if (req.files.avatar != undefined) {
       if (req.files.avatar.length >1) 
         return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'avatar >= 2 files');
