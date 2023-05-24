@@ -250,7 +250,7 @@ router.post("/set_block", verify, async (req, res) => {
 router.post('/set_accept_friend', verify, async (req, res) => {
   let thisUser, sentUser;
 
-  // user_id là id của người nhận request friend
+  // user_id là id của người gửi request friend
   // is_accept : 0 là từ chối, 1 là đồng ý
   let { user_id, is_accept } = req.query;
   if (user_id === undefined || is_accept === undefined)
@@ -394,6 +394,7 @@ router.post('/get_user_friends', verify, async (req, res) => {
   // input
   let { user_id, index, count } = req.query;
   // user id from token
+  console.log('req.user', req.user);
   let id = req.user.id;
 
   let data = {
@@ -430,6 +431,8 @@ router.post('/get_user_friends', verify, async (req, res) => {
     // for (let i = index; i < endFor; i++) {
     for (let i = 0; i < targetUser.friends.length; i++) {
       let x = targetUser.friends[i];
+      // if (!x.friend) continue;
+      // console.log(x);
       let friendInfor = {
         id: null, // id of this guy
         username: null,
