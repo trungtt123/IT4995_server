@@ -68,6 +68,7 @@ router.post('/get_requested_friends', verify, async (req, res) => {
         .select({ "friends": 1, "friendRequestSent": 1, "phoneNumber": 1, "_id": 1, "name": 1, "avatar": 1 });
 
       // console.log(sentUser);
+      if (!sentUser) continue;
       newElement.id = sentUser._id;
       newElement.username = sentUser.name;
       newElement.avatar = sentUser.avatar.url;
@@ -84,6 +85,7 @@ router.post('/get_requested_friends', verify, async (req, res) => {
     data.total = thisUser.friendRequestReceived.length;
     return callRes(res, responseError.OK, data);
   } catch (error) {
+    console.error(error);
     return callRes(res, responseError.UNKNOWN_ERROR);
   }
 })
@@ -150,17 +152,17 @@ router.post('/set_request_friend', verify, async (req, res) => {
           targetUser = await targetUser.save();
         }
         targetUser = await targetUser.save();
-      } else { // đã gửi yêu cầu trước đó, gửi lại để hủy yêu cầu
-        thisUser.friendRequestSent.splice(isExisted, 1);
-        thisUser = await thisUser.save();
-        data.requested_friends = 0;
+      } else { // đã gửi yêu cầu trước đó, vẫn giữ nguyên
+        // thisUser.friendRequestSent.splice(isExisted, 1);
+        // thisUser = await thisUser.save();
+        data.requested_friends = 1;
         // xóa request bên nhận
-        let isExisted1 = targetUser.friendRequestReceived.findIndex(element =>
-          element.fromUser._id.equals(thisUser._id));
-        if (isExisted1 >= 0) {
-          targetUser.friendRequestReceived.splice(isExisted1, 1);
-          targetUser = await targetUser.save();
-        }
+        // let isExisted1 = targetUser.friendRequestReceived.findIndex(element =>
+        //   element.fromUser._id.equals(thisUser._id));
+        // if (isExisted1 >= 0) {
+        //   targetUser.friendRequestReceived.splice(isExisted1, 1);
+        //   targetUser = await targetUser.save();
+        // }
       }
       return callRes(res, responseError.OK, data);
 
@@ -424,15 +426,17 @@ router.post('/get_user_friends', verify, async (req, res) => {
     } else {
       targetUser = thisUser;
     }
-    await targetUser.populate({ path: 'friends.friend', select: { 'friends': 1, 'name': 1, 'avatar': 1 } }).execPopulate();
+    await targetUser.populate({ path: 'friends.friend', select: { 'friends': 1, 'name': 1, 'avatar': 1, 'phoneNumber': 1 } }).execPopulate();
     console.log(user_id, id);
 
     let endFor = targetUser.friends.length < index + count ? targetUser.friends.length : index + count;
     // for (let i = index; i < endFor; i++) {
+    console.log('targetUser.friends', targetUser.friends);
+    thisUser.friends = thisUser.friends.filter(o => o.friend);
+    console.log('thisUser.friends', thisUser.friends);
+    targetUser.friends = targetUser.friends.filter(o => o.friend);
     for (let i = 0; i < targetUser.friends.length; i++) {
       let x = targetUser.friends[i];
-      // if (!x.friend) continue;
-      // console.log(x);
       let friendInfor = {
         id: null, // id of this guy
         username: null,
@@ -445,6 +449,7 @@ router.post('/get_user_friends', verify, async (req, res) => {
       friendInfor.id = x.friend._id.toString();
       friendInfor.username = x.friend.name;
       friendInfor.avatar = x.friend.avatar.url;
+      friendInfor.phoneNumber = x.friend.phoneNumber;
       friendInfor.created = validTime.timeToSecond(x.createdAt);
       if (id === x.friend._id.toString()){
         friendInfor.isFriendStatus = -1;
@@ -465,7 +470,7 @@ router.post('/get_user_friends', verify, async (req, res) => {
     data.total = targetUser.friends.length;
     return callRes(res, responseError.OK, data);
   } catch (error) {
-    console.log(error.message)
+    console.log(error)
     return callRes(res, responseError.UNKNOWN_ERROR, error.message);
   }
 })

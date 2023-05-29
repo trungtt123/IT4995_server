@@ -21,8 +21,63 @@ const {bucket} = require('./firebase');
 const uploader = multer({
   storage: multer.memoryStorage(),
 });
-
-router.post ('/get_user_info', async (req, res) => {
+router.post('/get_user_from_phone', verify, async (req, res) => {
+  let { token, phoneNumber} = req.query;
+  let tokenUser;
+  if (token) {
+    tokenUser = await getUserIDFromToken(token);
+    if (tokenUser && typeof tokenUser === 'string') return callRes(res, responseError[tokenUser]);
+  }
+  if (!phoneNumber) return callRes(res, responseError.PARAMETER_IS_NOT_ENOUGH);
+  if (typeof phoneNumber !== 'string') return callRes(res, responseError.PARAMETER_TYPE_IS_INVALID, 'phoneNumber');
+  let data = {
+    id: null,
+    username: null,
+    created: null,
+    description: null,
+    avatar: null,
+    cover_image: null,
+    link: null,
+    address: null,
+    city: null,
+    country: null,
+    listing: null,
+    is_friend: null,
+    online: null,
+    phoneNumber: null,
+    is_myself: null
+  }
+  try {
+    const user = await User.findOne({phoneNumber: phoneNumber});
+    if (!user) return callRes(res, responseError.NO_DATA_OR_END_OF_LIST_DATA, 'user');
+    data.id = user._id.toString();
+    data.username = user.name;
+    data.created = validTime.timeToSecond(user.createdAt);
+    data.description = user.description;
+    data.avatar= user.avatar.url;
+    data.cover_image = user.coverImage.url;
+    data.link = user.link;
+    data.address = user.address;
+    data.city = user.city;
+    data.country = user.country;
+    data.birthday = validTime.timeToSecond(user.birthday);
+    data.listing = user.friends.length;
+    data.is_friend = false;
+    data.phoneNumber = user.phoneNumber;
+    if (user._id.toString() !== tokenUser.id) {
+      let indexExist = user.friends.findIndex(element => element.friend._id.equals(tokenUser.id)); 
+      data.is_friend =  (indexExist >= 0) ? true : false;
+    }
+    else {
+      data.is_myself = true;
+    }
+    return callRes(res, responseError.OK, data);
+  }
+  catch (error) {
+    return callRes(res, responseError.UNKNOWN_ERROR, error.message);
+  }
+});
+router.post('/get_user_info', async (req, res) => {
   let { token, user_id } = req.query;
   let tokenUser, tokenError;
   if (token) {

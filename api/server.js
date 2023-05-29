@@ -28,16 +28,16 @@ mongoose.connect(url,
   );
 
 // use Routes
-app.use('/it4788/auth', require('./routes/auth'));
-app.use('/it4788/friend', require('./routes/friend'));
-app.use('/it4788/post', require('./routes/posts'));
-app.use('/it4788/search', require('./routes/search'));
-app.use('/it4788/comment', require('./routes/comments'));
-app.use('/it4788/like', require('./routes/likes'));
-app.use('/it4788/friend', require('./routes/friend'));
-app.use('/it4788/setting', require('./routes/settings'));
-app.use('/it4788/user', require('./routes/user'));
-app.use('/it4788/chat', require('./routes/restChat'));
+app.use('/it4995/auth', require('./routes/auth'));
+app.use('/it4995/friend', require('./routes/friend'));
+app.use('/it4995/post', require('./routes/posts'));
+app.use('/it4995/search', require('./routes/search'));
+app.use('/it4995/comment', require('./routes/comments'));
+app.use('/it4995/like', require('./routes/likes'));
+app.use('/it4995/friend', require('./routes/friend'));
+app.use('/it4995/setting', require('./routes/settings'));
+app.use('/it4995/user', require('./routes/user'));
+app.use('/it4995/chat', require('./routes/restChat'));
 _io.on('connection', async (socket) => {
   console.log('Connected: ' + socket.id);
   require('./routes/chat')(socket);
