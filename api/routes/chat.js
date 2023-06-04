@@ -39,7 +39,7 @@ module.exports = function (socket) {
         socket.join(userId);
         const numClients = _io.sockets.adapter.rooms.get(userId)?.size;
         console.log('room ' + userId + " có " + numClients)
-    })
+    });
     socket.on('get_list_conversation', async (data) => {
         const { userId, token } = data;
         const verifyToken = await verifySocketToken(token);
@@ -95,16 +95,25 @@ module.exports = function (socket) {
         let { phoneNumber, conversationId, token } = data;
         const verifyToken = await verifySocketToken(token);
         if (!verifyToken) {
-            socket.emit('conversation_change', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
+            socket.emit('conversation_add_member', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
             return;
         }
+        const verified = jwt.verify(token, process.env.jwtSecret);
+        const sender = await User.findOne({ _id: verified.id });
+        
         const user = await User.findOne({ phoneNumber: phoneNumber });
         if (!user) {
-            socket.emit('conversation_change', { code: '9999', message: 'FAILED', reason: 'USER NOT EXIST' });
+            socket.emit('conversation_add_member', { code: '9999', message: 'FAILED', reason: 'USER NOT EXIST' });
             return;
         }
         let converation = await Conversation.findOne({ _id: conversationId });
         let participants = converation.participants;
+        console.log('participants', participants);
+        console.log('user._id', user._id);
+        if (participants?.map(o => o.user).includes(user._id)) {
+            socket.emit('conversation_add_member', { code: '9999', message: 'FAILED', reason: 'USER ALREADY EXISTS IN CHAT' });
+            return;
+        }
         participants.push({
             user: user._id
         })
@@ -115,6 +124,22 @@ module.exports = function (socket) {
         user.conversations.push(conversationId);
         await user.save();
         const listConversation = await Conversation.find({ _id: { $in: user.conversations } }).sort({ updatedAt: -1 });
+        _io.in(conversationId).emit('conversation_add_member',
+            {
+                code: '1000',
+                message: 'OK',
+                sender: {
+                    id: sender._id,
+                    name: sender.name,
+                    avatar: sender.avatar
+                },
+                newMember: {
+                    id: user._id,
+                    name: user.name,
+                    avatar: user.avatar
+                }
+            }
+        );
         _io.in(user._id.toString()).emit('conversation_change',
             {
                 code: '1000',
@@ -448,7 +473,6 @@ module.exports = function (socket) {
     //     }
     //     return callRes(res, responseError.OK, 'Successfully set read message');
     // });
-
     socket.on('client_get_list_conversation', async (dataSocket) => {
         const { token, thisUserId } = dataSocket;
         const verifyToken = await verifySocketToken(token);
