@@ -47,17 +47,21 @@ module.exports = function (socket) {
             socket.emit('conversation_add_member', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
             return;
         }
+        const verified = jwt.verify(token, process.env.jwtSecret);
+        const sender = await User.findOne({ _id: verified.id });
         let converation = await Conversation.findOne({ _id: conversationId });
         let participantIds = converation.participants?.map(o => o.user.toString());
         console.log('participantIds', participantIds);
         for (let item of participantIds) {
             const numClients = _io.sockets.adapter.rooms.get(item)?.size;
             console.log('room ' + item + " có " + numClients)
-            socket.to(item).emit('call',
+            _io.in(item).emit('call',
                 {
                     code: '1000',
                     message: 'OK',
-                    converationId: conversationId
+                    senderId: sender._id,
+                    converationId: conversationId,
+                    converationName: converation.conversationName
                 }
             );
         }
