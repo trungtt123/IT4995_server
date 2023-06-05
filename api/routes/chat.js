@@ -40,6 +40,28 @@ module.exports = function (socket) {
         const numClients = _io.sockets.adapter.rooms.get(userId)?.size;
         console.log('room ' + userId + " có " + numClients)
     });
+    socket.on('call', async (data) => {
+        let { conversationId, token } = data;
+        const verifyToken = await verifySocketToken(token);
+        if (!verifyToken) {
+            socket.emit('conversation_add_member', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
+            return;
+        }
+        let converation = await Conversation.findOne({ _id: conversationId });
+        let participantIds = converation.participants?.map(o => o.user.toString());
+        console.log('participantIds', participantIds);
+        for (let item of participantIds) {
+            const numClients = _io.sockets.adapter.rooms.get(item)?.size;
+            console.log('room ' + item + " có " + numClients)
+            socket.to(item).emit('call',
+                {
+                    code: '1000',
+                    message: 'OK',
+                    converationId: conversationId
+                }
+            );
+        }
+    })
     socket.on('get_list_conversation', async (data) => {
         const { userId, token } = data;
         const verifyToken = await verifySocketToken(token);
@@ -100,7 +122,7 @@ module.exports = function (socket) {
         }
         const verified = jwt.verify(token, process.env.jwtSecret);
         const sender = await User.findOne({ _id: verified.id });
-        
+
         const user = await User.findOne({ phoneNumber: phoneNumber });
         if (!user) {
             socket.emit('conversation_add_member', { code: '9999', message: 'FAILED', reason: 'USER NOT EXIST' });
