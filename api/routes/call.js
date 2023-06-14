@@ -1,22 +1,15 @@
 const rooms = {}
-const messages = {}
-//Not API
+const Conversation = require('../models/Conversation');
 module.exports = function (socket) {
     const room = socket.handshake.query.room
 
     rooms[room] = rooms[room] && rooms[room].set(socket.id, socket) || (new Map()).set(socket.id, socket)
-    messages[room] = messages[room] || []
 
     console.log(socket.id, room)
     socket.emit('connection-success', {
         success: socket.id,
         peerCount: rooms[room].size,
-        messages: messages[room],
     })
-
-    // const broadcast = () => socket.broadcast.emit('joined-peers', {
-    //   peerCount: connectedPeers.size,
-    // })
     const broadcast = () => {
         const _connectedPeers = rooms[room]
 
@@ -29,11 +22,6 @@ module.exports = function (socket) {
         }
     }
     broadcast()
-
-    // const disconnectedPeer = (socketID) => socket.broadcast.emit('peer-disconnected', {
-    //   peerCount: connectedPeers.size,
-    //   socketID: socketID
-    // })
     const disconnectedPeer = (socketID) => {
         const _connectedPeers = rooms[room]
         for (const [_socketID, _socket] of _connectedPeers.entries()) {
@@ -44,29 +32,42 @@ module.exports = function (socket) {
         }
     }
 
-    socket.on('new-message', (data) => {
-        console.log('new-message', JSON.parse(data.payload))
-
-        messages[room] = [...messages[room], JSON.parse(data.payload)]
-    })
-
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
         console.log('disconnected is ', socket.id)
         // connectedPeers.delete(socket.id)
-        rooms[room].delete(socket.id)
-        messages[room] = rooms[room].size === 0 ? null : messages[room]
+        rooms[room].delete(socket.id);
+        if (rooms[room].size === 0) {
+            let converation = await Conversation.findOne({ _id: room });
+            let participantIds = converation.participants?.map(o => o.user.toString());
+            console.log('participantIds', participantIds);
+            for (let item of participantIds) {
+                const numClients = _io.sockets.adapter.rooms.get(item)?.size;
+                console.log('room ' + item + " có " + numClients)
+                _io.in(item).emit('endcall');
+            }
+        }
         disconnectedPeer(socket.id)
     })
 
     // ************************************* //
     // NOT REQUIRED
     // ************************************* //
-    socket.on('socket-to-disconnect', (socketIDToDisconnect) => {
+    socket.on('socket-to-disconnect', async (socketIDToDisconnect) => {
         console.log('disconnected')
         // connectedPeers.delete(socket.id)
-        rooms[room].delete(socketIDToDisconnect)
-        messages[room] = rooms[room].size === 0 ? null : messages[room]
-        disconnectedPeer(socketIDToDisconnect)
+        rooms[room].delete(socketIDToDisconnect);
+        if (rooms[room].size === 0) {
+            let converation = await Conversation.findOne({ _id: room });
+            let participantIds = converation.participants?.map(o => o.user.toString());
+            console.log('participantIds', participantIds);
+            for (let item of participantIds) {
+                const numClients = _io.sockets.adapter.rooms.get(item)?.size;
+                console.log('room ' + item + " có " + numClients)
+                _io.in(item).emit('endcall');
+            }
+        }
+        disconnectedPeer(socketIDToDisconnect);
+
     })
 
     socket.on('onlinePeers', (data) => {
