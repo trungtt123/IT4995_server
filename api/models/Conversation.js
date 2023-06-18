@@ -5,6 +5,10 @@ const MessageSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  notification: {
+    type: Boolean,
+    required: false
+  },
   sender: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'users',

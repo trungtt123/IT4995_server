@@ -99,7 +99,7 @@ module.exports = function (socket) {
             user: userId,
             permissions: 'owner'
         });
-        user.conversations.push(newConveration._id);
+        user.conversations.push(newConveration._id.toString());
         if (!conversationName) conversationName = "Cuộc hội thoại mới"
         await Conversation.findOneAndUpdate({ _id: newConveration._id },
             {
@@ -173,6 +173,61 @@ module.exports = function (socket) {
             }
         );
     })
+    socket.on('remove_member', async (data) => {
+        let { userId, conversationId, token } = data;
+        const verifyToken = await verifySocketToken(token);
+        if (!verifyToken) {
+            socket.emit('conversation_remove_member', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
+            return;
+        }
+        const verified = jwt.verify(token, process.env.jwtSecret);
+        const sender = await User.findOne({ _id: verified.id });
+
+        const user = await User.findOne({ _id: userId });
+        if (!user) {
+            socket.emit('conversation_remove_member', { code: '9999', message: 'FAILED', reason: 'USER NOT EXIST' });
+            return;
+        }
+        let converation = await Conversation.findOne({ _id: conversationId });
+        let participants = converation.participants;
+        console.log('participants', participants);
+        console.log('user._id', user._id);
+        if (!participants?.map(o => o.user).includes(user._id)) {
+            socket.emit('conversation_remove_member', { code: '9999', message: 'FAILED', reason: 'USER NOT EXIST IN CHAT' });
+            return;
+        }
+        participants = participants.filter(o => o.user.toString() !== user._id.toString());
+        await Conversation.findOneAndUpdate({ _id: conversationId },
+            {
+                participants: participants,
+            }, { new: true, useFindAndModify: false });
+        user.conversations = user.conversations.filter(o => o.toString() !== conversationId);
+        await user.save();
+        const listConversation = await Conversation.find({ _id: { $in: user.conversations } }).sort({ updatedAt: -1 });
+        _io.in(conversationId).emit('conversation_remove_member',
+            {
+                code: '1000',
+                message: 'OK',
+                sender: {
+                    id: sender._id,
+                    name: sender.name,
+                    avatar: sender.avatar
+                },
+                removeMember: {
+                    id: user._id,
+                    name: user.name,
+                    avatar: user.avatar
+                }
+            }
+        );
+        _io.in(user._id.toString()).emit('conversation_change',
+            {
+                code: '1000',
+                message: 'OK',
+                data: listConversation
+            }
+        );
+    })
     socket.on('join_conversation', async (data) => {
         const { conversationId, token } = data;
         socket.join(conversationId);
@@ -201,7 +256,7 @@ module.exports = function (socket) {
 
     socket.on('new_message', async (data) => {
         try {
-            const { conversationId, token, content, userId } = data;
+            const { conversationId, token, content, userId, notification } = data;
             const verifyToken = await verifySocketToken(token);
             if (!verifyToken) {
                 socket.emit('new_message', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
@@ -219,6 +274,7 @@ module.exports = function (socket) {
             }
             let messages = conversation.messages;
             messages.push({
+                notification: notification,
                 content: content,
                 sender: userId
             });
@@ -256,248 +312,6 @@ module.exports = function (socket) {
             console.log(e);
         }
     });
-
-    // socket.on('delete_conversation', verify, async (req, res) => {
-    //     let token = req.query.token;
-    //     if (token === undefined) {
-    //         return callRes(res, responseError.PARAMETER_IS_NOT_ENOUGH, 'token');
-    //     }
-    //     if (typeof token != "string") {
-    //         return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'token');
-    //     }
-    //     let id = req.user.id;
-    //     let thisUser = await User.findById(id);
-    //     if (thisUser.isBlocked) {
-    //         return callRes(res, responseError.USER_IS_NOT_VALIDATED, 'Your account has been blocked');
-    //     }
-    //     if (req.query.partner_id) {
-    //         let targetConversation;
-    //         let partnerId = req.query.partner_id;
-    //         try {
-    //             var partnerUser = await User.findById(partnerId);
-    //         } catch (err) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find partner');
-    //         }
-    //         if (partnerUser == null) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find partner');
-    //         }
-    //         try {
-    //             var targetConversation1 = await Conversation.findOne({ firstUser: partnerId });
-    //             var targetConversation2 = await Conversation.findOne({ secondUser: partnerId });
-    //         } catch (err) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'partner_id');
-    //         }
-    //         if (targetConversation1) {
-    //             if (targetConversation1.secondUser == id) {
-    //                 targetConversation = targetConversation1;
-    //             } else {
-    //                 return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find conversation');
-    //             }
-    //         }
-    //         else if (targetConversation2) {
-    //             if (targetConversation2.firstUser == id) {
-    //                 targetConversation = targetConversation2;
-    //             } else {
-    //                 return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find conversation');
-    //             }
-    //         }
-    //         else {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find conversation');
-    //         }
-    //         await Conversation.deleteOne({ _id: targetConversation._id });
-    //     }
-    //     else if (req.query.conversation_id) {
-    //         let targetConversation;
-    //         let conversationId = req.query.conversation_id;
-    //         targetConversation = await Conversation.findOne({ conversationId: conversationId });
-    //         if (targetConversation == null) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find conversation');
-    //         }
-    //         if (targetConversation.firstUser != id && targetConversation.secondUser != id) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'This is not your conversation');
-    //         }
-    //         await Conversation.deleteOne({ _id: targetConversation._id });
-    //     }
-    //     else {
-    //         return callRes(res, responseError.PARAMETER_IS_NOT_ENOUGH, 'conversation_id or partner_id');
-    //     }
-    //     return callRes(res, responseError.OK, 'Successfully delete conversation');
-    // });
-
-    // socket.on('delete_message', verify, async (req, res) => {
-    //     let token = req.query.token;
-    //     if (token === undefined) {
-    //         return callRes(res, responseError.PARAMETER_IS_NOT_ENOUGH, 'token');
-    //     }
-    //     if (typeof token != "string") {
-    //         return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'token');
-    //     }
-    //     let id = req.user.id;
-    //     let thisUser = await User.findById(id);
-    //     if (thisUser.isBlocked) {
-    //         return callRes(res, responseError.USER_IS_NOT_VALIDATED, 'Your account has been blocked');
-    //     }
-    //     if (req.query.message_id === undefined) {
-    //         return callRes(res, responseError.PARAMETER_IS_NOT_ENOUGH, 'message_id');
-    //     }
-    //     if (req.query.partner_id) {
-    //         let flag = false;
-    //         let targetConversation;
-    //         let partnerId = req.query.partner_id;
-    //         let messageId = req.query.message_id;
-    //         try {
-    //             var partnerUser = await User.findById(partnerId);
-    //         } catch (err) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find partner');
-    //         }
-    //         if (partnerUser == null) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find partner');
-    //         }
-    //         try {
-    //             var targetConversation1 = await Conversation.findOne({ firstUser: partnerId });
-    //             var targetConversation2 = await Conversation.findOne({ secondUser: partnerId });
-    //         } catch (err) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'partner_id');
-    //         }
-    //         if (targetConversation1) {
-    //             if (targetConversation1.secondUser == id) {
-    //                 targetConversation = targetConversation1;
-    //             } else {
-    //                 return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find conversation');
-    //             }
-    //         }
-    //         else if (targetConversation2) {
-    //             if (targetConversation2.firstUser == id) {
-    //                 targetConversation = targetConversation2;
-    //             } else {
-    //                 return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find conversation');
-    //             }
-    //         }
-    //         else {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find conversation');
-    //         }
-    //         for (dialog in targetConversation.dialog) {
-    //             if (targetConversation.dialog[dialog].dialogId == messageId) {
-    //                 if (targetConversation.dialog[dialog].sender == id) {
-    //                     targetConversation.dialog.splice(dialog, 1);
-    //                     flag = true;
-    //                     break;
-    //                 }
-    //                 else {
-    //                     return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'This is not your message');
-    //                 }
-    //             }
-    //         }
-    //         if (!flag) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find message');
-    //         }
-    //         targetConversation = await targetConversation.save();
-    //     }
-    //     else if (req.query.conversation_id) {
-    //         let flag = false;
-    //         let targetConversation;
-    //         let conversationId = req.query.conversation_id;
-    //         let messageId = req.query.message_id;
-    //         targetConversation = await Conversation.findOne({ conversationId: conversationId });
-    //         if (targetConversation == null) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find conversation');
-    //         }
-    //         for (dialog in targetConversation.dialog) {
-    //             if (targetConversation.dialog[dialog].dialogId == messageId) {
-    //                 if (targetConversation.dialog[dialog].sender == id) {
-    //                     targetConversation.dialog.splice(dialog, 1);
-    //                     flag = true;
-    //                     break;
-    //                 }
-    //                 else {
-    //                     return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'This is not your message');
-    //                 }
-    //             }
-    //         }
-    //         if (!flag) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find message');
-    //         }
-    //         targetConversation = await targetConversation.save();
-    //     }
-    //     else {
-    //         return callRes(res, responseError.PARAMETER_IS_NOT_ENOUGH, 'conversation_id or partner_id');
-    //     }
-    //     return callRes(res, responseError.OK, 'Successfully delete message');
-    // });
-
-    // socket.on('set_read_message', verify, async (req, res) => {
-    //     let token = req.query.token;
-    //     if (token === undefined) {
-    //         return callRes(res, responseError.PARAMETER_IS_NOT_ENOUGH, 'token');
-    //     }
-    //     if (typeof token != "string") {
-    //         return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'token');
-    //     }
-    //     let id = req.user.id;
-    //     let thisUser = await User.findById(id);
-    //     if (thisUser.isBlocked) {
-    //         return callRes(res, responseError.USER_IS_NOT_VALIDATED, 'Your account has been blocked');
-    //     }
-    //     if (req.query.partner_id) {
-    //         let targetConversation;
-    //         let partnerId = req.query.partner_id;
-    //         try {
-    //             var partnerUser = await User.findById(partnerId);
-    //         } catch (err) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find partner');
-    //         }
-    //         if (partnerUser == null) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find partner');
-    //         }
-    //         try {
-    //             var targetConversation1 = await Conversation.findOne({ firstUser: partnerId });
-    //             var targetConversation2 = await Conversation.findOne({ secondUser: partnerId });
-    //         } catch (err) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'partner_id');
-    //         }
-    //         if (targetConversation1) {
-    //             if (targetConversation1.secondUser == id) {
-    //                 targetConversation = targetConversation1;
-    //             } else {
-    //                 return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find conversation');
-    //             }
-    //         }
-    //         else if (targetConversation2) {
-    //             if (targetConversation2.firstUser == id) {
-    //                 targetConversation = targetConversation2;
-    //             } else {
-    //                 return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find conversation');
-    //             }
-    //         }
-    //         else {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find conversation');
-    //         }
-    //         for (dialog in targetConversation.dialog) {
-    //             targetConversation.dialog[dialog].unread = "0";
-    //         }
-    //         targetConversation = await targetConversation.save();
-    //     }
-    //     else if (req.query.conversation_id) {
-    //         let targetConversation;
-    //         let conversationId = req.query.conversation_id;
-    //         targetConversation = await Conversation.findOne({ conversationId: conversationId });
-    //         if (targetConversation == null) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'Cannot find conversation');
-    //         }
-    //         if (targetConversation.firstUser != id && targetConversation.secondUser != id) {
-    //             return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'This is not your conversation');
-    //         }
-    //         for (dialog in targetConversation.dialog) {
-    //             targetConversation.dialog[dialog].unread = "0";
-    //             await targetConversation.save();
-    //         }
-    //         targetConversation = await targetConversation.save();
-    //     }
-    //     else {
-    //         return callRes(res, responseError.PARAMETER_IS_NOT_ENOUGH, 'conversation_id or partner_id');
-    //     }
-    //     return callRes(res, responseError.OK, 'Successfully set read message');
-    // });
     socket.on('client_get_list_conversation', async (dataSocket) => {
         const { token, thisUserId } = dataSocket;
         const verifyToken = await verifySocketToken(token);

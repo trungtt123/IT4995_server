@@ -37,7 +37,7 @@ app.use('/it4995/like', require('./routes/likes'));
 app.use('/it4995/friend', require('./routes/friend'));
 app.use('/it4995/setting', require('./routes/settings'));
 app.use('/it4995/user', require('./routes/user'));
-app.use('/it4995/chat', require('./routes/restChat'));
+app.use('/it4995/conversation', require('./routes/conversation'));
 _io.on('connection', async (socket) => {
   console.log('Connected: ' + socket.id);
   require('./routes/chat')(socket);
