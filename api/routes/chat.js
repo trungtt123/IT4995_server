@@ -282,6 +282,7 @@ module.exports = function (socket) {
                 {
                     messages: messages,
                 }, { new: true, useFindAndModify: false });
+            updateData = JSON.parse(JSON.stringify(updateData));
             for (let i = 0; i < updateData.participants.length; i++) {
                 const user = await User.findOne({ _id: updateData.participants[i].user }).select({ "avatar": 1, "name": 1, "_id": 1, "phoneNumber": 1, "conversations": 1 });
                 updateData.participants[i].user = {
@@ -291,6 +292,7 @@ module.exports = function (socket) {
                     phoneNumber: user.phoneNumber
                 };
                 const listConversation = await Conversation.find({ _id: { $in: user.conversations } }).sort({ updatedAt: -1 });
+                // cập nhật lại danh sách phòng cho tất cả user trong phòng
                 _io.in(user._id.toString()).emit('conversation_change',
                     {
                         code: '1000',
@@ -299,6 +301,7 @@ module.exports = function (socket) {
                     }
                 );
             }
+            console.log('updateData', updateData);
             _io.in(conversationId).emit('new_message',
                 {
                     code: '1000',
