@@ -173,6 +173,40 @@ module.exports = function (socket) {
             }
         );
     })
+    socket.on('conversation_change_name', async (data) => {
+        let { newName, conversationId, token } = data;
+        const verifyToken = await verifySocketToken(token);
+        if (!verifyToken) {
+            socket.emit('conversation_change_name', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
+            return;
+        }
+        const verified = jwt.verify(token, process.env.jwtSecret);
+        const sender = await User.findOne({ _id: verified.id });
+        if (!sender) {
+            socket.emit('conversation_change_name', { code: '9999', message: 'FAILED', reason: 'USER NOT EXIST' });
+            return;
+        }
+        let converation = await Conversation.findOne({ _id: conversationId });
+        let participants = converation.participants;
+        if (!participants?.map(o => o.user).includes(sender._id)) {
+            socket.emit('conversation_change_name', { code: '9999', message: 'FAILED', reason: 'USER NOT EXIST IN CHAT' });
+            return;
+        }
+        await Conversation.findOneAndUpdate({ _id: conversationId },
+            {
+                conversationName: newName,
+            }, { new: true, useFindAndModify: false });
+        _io.in(sender._id.toString()).emit('conversation_change_name',
+            {
+                code: '1000',
+                message: 'OK',
+                newName: newName,
+                sender: {
+                    name: sender.name
+                }
+            }
+        );
+    })
     socket.on('remove_member', async (data) => {
         let { userId, conversationId, token } = data;
         const verifyToken = await verifySocketToken(token);
