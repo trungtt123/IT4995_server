@@ -5,9 +5,14 @@ const MessageSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  /* 
+    notification = 0 -> tin nhắn thông thường
+    notification = 1 -> thông báo thêm / xóa người dùng / đổi tên đoạn chat / cuộc gọi kết thúc
+    notification = 2 -> thông báo có người tạo cuộc gọi
+  */
   notification: {
-    type: Boolean,
-    required: false
+    type: Number,
+    required: 0
   },
   sender: {
     type: mongoose.Schema.Types.ObjectId,
