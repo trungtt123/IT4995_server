@@ -64,6 +64,12 @@ module.exports = function (socket) {
         disconnectedPeer(socketIDToDisconnect);
     })
 
+    socket.on('send-emoji', data => {
+        const _connectedPeers = rooms[room]
+        for (const [socketID, _socket] of _connectedPeers.entries()) {
+            _socket.emit('receive-emoji', data);
+        }
+    })
     socket.on('onlinePeers', (data) => {
         const _connectedPeers = rooms[room]
         for (const [socketID, _socket] of _connectedPeers.entries()) {
