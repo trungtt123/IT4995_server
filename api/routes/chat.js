@@ -346,6 +346,12 @@ module.exports = function (socket) {
                 content: content,
                 sender: userId
             });
+            console.log('new_data', {
+                type: type,
+                content: content,
+                sender: userId
+            });
+            console.log('messages', messages);
             let updateData = await Conversation.findOneAndUpdate({ _id: conversationId },
                 {
                     messages: messages,
