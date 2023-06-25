@@ -340,7 +340,7 @@ module.exports = function (socket) {
                 socket.emit('new_message', { code: '9999', message: 'FAILED', reason: 'CONVERSATION NOT EXIST' });
                 return;
             }
-            let messages = conversation.messages;
+            let messages = JSON.parse(JSON.stringify(conversation.messages));
             messages.push({
                 type: type,
                 content: content,
