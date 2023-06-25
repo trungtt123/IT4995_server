@@ -8,7 +8,7 @@ const { responseError, callRes } = require('./response/error');
 const app = express()
 const http = require('http');
 const server = http.createServer(app);
-const io = require('socket.io')(server, { cors: { origin: '*' }, pingTimeout: 60000 });
+const io = require('socket.io')(server, { cors: { origin: '*' }, pingTimeout: 300000, maxHttpBufferSize: 3 * 1024 * 1024 });
 const callIO = require('socket.io')(server, { cors: '*', path: '/io/webrtc' });
 
 global._io = io;

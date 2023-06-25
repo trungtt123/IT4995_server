@@ -1,18 +1,26 @@
 const mongoose = require('mongoose');
 
 const MessageSchema = new mongoose.Schema({
+  /*
+    content: {
+      body: 
+    }
+  */
   content: {
-    type: String,
+    type: Object,
     required: true,
+    default: {}
   },
   /* 
-    notification = 0 -> tin nhắn thông thường
-    notification = 1 -> thông báo thêm / xóa người dùng / đổi tên đoạn chat / cuộc gọi kết thúc
-    notification = 2 -> thông báo có người tạo cuộc gọi
+    type = text -> tin nhắn text thông thường
+    type = video -> tin nhắn video
+    type = image -> tin nhắn hình ảnh
+    type = notification -> thông báo thêm / xóa người dùng / đổi tên đoạn chat / cuộc gọi kết thúc
   */
-  notification: {
-    type: Number,
-    required: 0
+  type: {
+    type: String,
+    required: true,
+    default: 'text'
   },
   sender: {
     type: mongoose.Schema.Types.ObjectId,

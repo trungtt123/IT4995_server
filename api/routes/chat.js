@@ -9,6 +9,39 @@ const convertString = require('../utils/convertString');
 const { responseError, callRes } = require('../response/error');
 const checkInput = require('../utils/validInput');
 const validTime = require('../utils/validTime');
+var multer = require('multer');
+const { bucket } = require('./firebase');
+const uploader = multer({
+    storage: multer.memoryStorage(),
+});
+function uploadFile(file) {
+    const newNameFile = new Date().toISOString() + file.originalname;
+    const blob = bucket.file(newNameFile);
+    const blobStream = blob.createWriteStream({
+        metadata: {
+            contentType: file.mimetype,
+        },
+    });
+    console.log(bucket.name);
+    console.log(blob.name);
+    const publicUrl =
+        `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURI(blob.name)}?alt=media`;
+    return new Promise((resolve, reject) => {
+
+        blobStream.on('error', function (err) {
+            reject(err);
+        });
+
+        blobStream.on('finish', () => {
+            resolve({
+                filename: newNameFile,
+                url: publicUrl
+            });
+        });
+
+        blobStream.end(file.buffer);
+    });
+}
 
 async function verifySocketToken(token) {
     try {
@@ -290,7 +323,8 @@ module.exports = function (socket) {
 
     socket.on('new_message', async (data) => {
         try {
-            const { conversationId, token, content, userId, notification } = data;
+            const { conversationId, token, content, userId, type } = data;
+            console.log('content', content);
             const verifyToken = await verifySocketToken(token);
             if (!verifyToken) {
                 socket.emit('new_message', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
@@ -308,7 +342,7 @@ module.exports = function (socket) {
             }
             let messages = conversation.messages;
             messages.push({
-                notification: notification,
+                type: type,
                 content: content,
                 sender: userId
             });
@@ -419,8 +453,6 @@ module.exports = function (socket) {
         }
         socket.emit('server_send_list_conversation', { message: 'OK', data: data, totalNewMessage: totalNewMessage });
     });
-
-
 }
 
 
