@@ -8,8 +8,7 @@ const MessageSchema = new mongoose.Schema({
   */
   content: {
     type: Object,
-    required: true,
-    default: {}
+    required: true
   },
   /* 
     type = text -> tin nhắn text thông thường
