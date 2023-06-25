@@ -342,16 +342,11 @@ module.exports = function (socket) {
             }
             let messages = JSON.parse(JSON.stringify(conversation.messages));
             messages.push({
-                type: type,
+                type: type || 'text',
                 content: content,
                 sender: userId
             });
-            console.log('new_data', {
-                type: type,
-                content: content,
-                sender: userId
-            });
-            console.log('messages', messages);
+            console.log('new_messages', messages);
             let updateData = await Conversation.findOneAndUpdate({ _id: conversationId },
                 {
                     messages: messages,
