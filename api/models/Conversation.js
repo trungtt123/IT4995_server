@@ -38,6 +38,13 @@ const ParticipantSchema = new mongoose.Schema({
     ref: 'users',
     required: true,
   },
+  lastSeen: {
+    type: Object,
+    default: {
+      messageId: '',
+      index: 0
+    }
+  },
   permissions: {
     type: String,
     required: true,

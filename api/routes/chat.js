@@ -9,39 +9,7 @@ const convertString = require('../utils/convertString');
 const { responseError, callRes } = require('../response/error');
 const checkInput = require('../utils/validInput');
 const validTime = require('../utils/validTime');
-var multer = require('multer');
-const { bucket } = require('./firebase');
-const uploader = multer({
-    storage: multer.memoryStorage(),
-});
-function uploadFile(file) {
-    const newNameFile = new Date().toISOString() + file.originalname;
-    const blob = bucket.file(newNameFile);
-    const blobStream = blob.createWriteStream({
-        metadata: {
-            contentType: file.mimetype,
-        },
-    });
-    console.log(bucket.name);
-    console.log(blob.name);
-    const publicUrl =
-        `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURI(blob.name)}?alt=media`;
-    return new Promise((resolve, reject) => {
-
-        blobStream.on('error', function (err) {
-            reject(err);
-        });
-
-        blobStream.on('finish', () => {
-            resolve({
-                filename: newNameFile,
-                url: publicUrl
-            });
-        });
-
-        blobStream.end(file.buffer);
-    });
-}
+let socketMap = {};
 
 async function verifySocketToken(token) {
     try {
@@ -67,6 +35,11 @@ async function verifySocketToken(token) {
 }
 //Not API
 module.exports = function (socket) {
+    socket.on('disconnect', () => {
+        console.log('Socket disconnected:', socket.id);
+        delete socketMap[socket.id];
+        console.log('socketMap', socketMap)
+    });
     socket.on('me', (data) => {
         const { userId, token } = data;
         socket.join(userId);
@@ -295,30 +268,74 @@ module.exports = function (socket) {
             }
         );
     })
+    socket.on('leave_conversation', async (data) => {
+        try {
+            const { conversationId } = data;
+            delete socketMap[socket.id];
+            socket.leave(conversationId);
+        }
+        catch(e){
+            console.error(e);
+        }
+    })
     socket.on('join_conversation', async (data) => {
-        const { conversationId, token } = data;
-        socket.join(conversationId);
-        const conversation = await Conversation.findOne({ _id: conversationId });
-        const verifyToken = await verifySocketToken(token);
-        if (!verifyToken) {
-            socket.emit('new_message', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
-            return;
-        }
-        if (!conversation) {
-            socket.emit('new_message', { code: '9999', message: 'FAILED', reason: 'CONVERSATION NOT EXIST' });
-            return;
-        }
-        for (let i = 0; i < conversation.participants.length; i++) {
-            const user = await User.findOne({ _id: conversation.participants[i].user }).select({ "avatar": 1, "name": 1, "_id": 1, "phoneNumber": 1 });
-            conversation.participants[i].user = user
-        }
-        socket.emit('new_message',
-            {
-                code: '1000',
-                message: 'OK',
-                data: conversation
+        try {
+            const { conversationId, token } = data;
+            const verified = jwt.verify(token, process.env.jwtSecret);
+            let userId = verified.id;
+            socketMap[socket.id] = userId;
+            socket.join(conversationId);
+            let conversation = await Conversation.findOne({ _id: conversationId });
+            const socketsInRoom = _io.sockets.adapter.rooms.get(conversationId);
+            // Kiểm tra nếu danh sách tồn tại
+            if (socketsInRoom) {
+                // Chuyển đổi danh sách sockets thành một mảng
+                const sockets = Array.from(socketsInRoom);
+                console.log('socketMap', socketMap);
+                // In ra danh sách các socket
+                console.log('Danh sách các socket trong room', sockets);
+                let userInChat = sockets.map(o => socketMap[o].toString());
+                // khi user đã vào conversation thì update tin nhắn đã xem của user
+                let participants = conversation?.participants;
+                console.log('userInChat', userInChat);
+                for (let i = 0; i < participants.length; i++) {
+                    if (userInChat.includes(participants[i].user.toString())) {
+                        participants[i].lastSeen = {
+                            messageId: conversation?.messages[conversation?.messages?.length - 1]._id,
+                            index: conversation?.messages?.length - 1
+                        }
+                    }
+                }
+                conversation = await Conversation.findOneAndUpdate({ _id: conversationId },
+                    {
+                        participants: participants,
+                    }, { new: true, useFindAndModify: false });
             }
-        );
+
+            const verifyToken = await verifySocketToken(token);
+            if (!verifyToken) {
+                socket.emit('new_message', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
+                return;
+            }
+            if (!conversation) {
+                socket.emit('new_message', { code: '9999', message: 'FAILED', reason: 'CONVERSATION NOT EXIST' });
+                return;
+            }
+            for (let i = 0; i < conversation.participants.length; i++) {
+                const user = await User.findOne({ _id: conversation.participants[i].user }).select({ "avatar": 1, "name": 1, "_id": 1, "phoneNumber": 1 });
+                conversation.participants[i].user = user
+            }
+            socket.emit('new_message',
+                {
+                    code: '1000',
+                    message: 'OK',
+                    data: conversation
+                }
+            );
+        }
+        catch (e) {
+            console.error(e);
+        }
     })
 
     socket.on('new_message', async (data) => {
@@ -342,14 +359,32 @@ module.exports = function (socket) {
             }
             let messages = JSON.parse(JSON.stringify(conversation.messages));
             messages.push({
+                _id: mongoose.Types.ObjectId(),
                 type: type || 'text',
                 content: content,
                 sender: userId
             });
-            console.log('new_messages', messages);
+
+            const socketsInRoom = _io.sockets.adapter.rooms.get(conversationId);
+            // Chuyển đổi danh sách sockets thành một mảng
+            const sockets = socketsInRoom ? Array.from(socketsInRoom) : [];
+            let userInChat = sockets.map(o => socketMap[o].toString());
+            // khi user đã vào conversation thì update tin nhắn đã xem của user
+            let participants = conversation?.participants;
+            console.log('userInChat', userInChat);
+            for (let i = 0; i < participants.length; i++) {
+                if (userInChat.includes(participants[i].user.toString())) {
+                    participants[i].lastSeen = {
+                        messageId: messages[conversation?.messages?.length - 1]._id,
+                        index: messages?.length - 1
+                    }
+                }
+            }
+
             let updateData = await Conversation.findOneAndUpdate({ _id: conversationId },
                 {
                     messages: messages,
+                    participants: participants,
                 }, { new: true, useFindAndModify: false });
             updateData = JSON.parse(JSON.stringify(updateData));
             for (let i = 0; i < updateData.participants.length; i++) {
@@ -370,7 +405,6 @@ module.exports = function (socket) {
                     }
                 );
             }
-            console.log('updateData', updateData);
             _io.in(conversationId).emit('new_message',
                 {
                     code: '1000',
