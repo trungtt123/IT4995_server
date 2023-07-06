@@ -124,6 +124,7 @@ module.exports = function (socket) {
     })
     socket.on('add_member', async (data) => {
         let { phoneNumber, conversationId, token } = data;
+        console.log('data', data);
         const verifyToken = await verifySocketToken(token);
         if (!verifyToken) {
             socket.emit('conversation_add_member', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
@@ -301,8 +302,8 @@ module.exports = function (socket) {
                 for (let i = 0; i < participants.length; i++) {
                     if (userInChat.includes(participants[i].user.toString())) {
                         participants[i].lastSeen = {
-                            messageId: conversation?.messages[conversation?.messages?.length - 1]._id,
-                            index: conversation?.messages?.length - 1
+                            messageId: conversation?.messages[conversation?.messages?.length - 1]?._id || "",
+                            index: conversation?.messages?.length - 1 
                         }
                     }
                 }
@@ -325,7 +326,7 @@ module.exports = function (socket) {
                 const user = await User.findOne({ _id: conversation.participants[i].user }).select({ "avatar": 1, "name": 1, "_id": 1, "phoneNumber": 1 });
                 conversation.participants[i].user = user
             }
-            socket.emit('new_message',
+            _io.in(conversationId).emit('new_message',
                 {
                     code: '1000',
                     message: 'OK',
@@ -375,7 +376,7 @@ module.exports = function (socket) {
             for (let i = 0; i < participants.length; i++) {
                 if (userInChat.includes(participants[i].user.toString())) {
                     participants[i].lastSeen = {
-                        messageId: messages[conversation?.messages?.length - 1]._id,
+                        messageId: messages[messages?.length - 1]?._id || "",
                         index: messages?.length - 1
                     }
                 }
