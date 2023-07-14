@@ -87,40 +87,48 @@ module.exports = function (socket) {
         socket.emit('conversation_change', { code: "1000", message: 'OK', data: listConversation });
     });
     socket.on('create_conversation', async (data) => {
-        const { userId, token } = data;
-        let { conversationName } = data;
-        const verifyToken = await verifySocketToken(token);
-        if (!verifyToken) {
-            socket.emit('conversation_change', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
-            return;
-        }
-        const user = await User.findOne({ _id: userId });
-        if (!user) {
-            socket.emit('conversation_change', { code: '9999', message: 'FAILED', reason: 'USER NOT EXIST' });
-            return;
-        }
-        let newConveration = await Conversation.create({});
-        let participants = newConveration.participants;
-        participants.push({
-            user: userId,
-            permissions: 'owner'
-        });
-        user.conversations.push(newConveration._id.toString());
-        if (!conversationName) conversationName = "Cuộc hội thoại mới"
-        await Conversation.findOneAndUpdate({ _id: newConveration._id },
-            {
-                participants: participants,
-                conversationName: conversationName,
-            }, { new: true, useFindAndModify: false });
-        await user.save();
-        const listConversation = await Conversation.find({ _id: { $in: user.conversations } }).sort({ updatedAt: -1 });
-        socket.emit('conversation_change',
-            {
-                code: '1000',
-                message: 'OK',
-                data: listConversation
+        try {
+            const { userId, token } = data;
+            let { conversationName } = data;
+            const verifyToken = await verifySocketToken(token);
+            if (!verifyToken) {
+                socket.emit('create_conversation', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
+                return;
             }
-        );
+            const user = await User.findOne({ _id: userId });
+            if (!user) {
+                socket.emit('create_conversation', { code: '9999', message: 'FAILED', reason: 'USER NOT EXIST' });
+                return;
+            }
+            let newConveration = await Conversation.create({});
+            let participants = newConveration.participants;
+            participants.push({
+                user: userId,
+                permissions: 'owner'
+            });
+            user.conversations.push(newConveration._id.toString());
+            if (!conversationName) conversationName = "Cuộc hội thoại mới"
+            await Conversation.findOneAndUpdate({ _id: newConveration._id },
+                {
+                    participants: participants,
+                    conversationName: conversationName,
+                }, { new: true, useFindAndModify: false });
+            await user.save();
+            const listConversation = await Conversation.find({ _id: { $in: user.conversations } }).sort({ updatedAt: -1 });
+            socket.emit('create_conversation', { code: '1000', message: 'OK' });
+            socket.emit('conversation_change',
+                {
+                    code: '1000',
+                    message: 'OK',
+                    data: listConversation
+                }
+            );
+        }
+        catch (e) {
+            console.log(e);
+            socket.emit('create_conversation', { code: '9999', message: 'FAILED', reason: 'UNKNOW' });
+        }
+
     })
     socket.on('add_member', async (data) => {
         let { phoneNumber, conversationId, token } = data;
@@ -275,7 +283,7 @@ module.exports = function (socket) {
             delete socketMap[socket.id];
             socket.leave(conversationId);
         }
-        catch(e){
+        catch (e) {
             console.error(e);
         }
     })
@@ -303,7 +311,7 @@ module.exports = function (socket) {
                     if (userInChat.includes(participants[i].user.toString())) {
                         participants[i].lastSeen = {
                             messageId: conversation?.messages[conversation?.messages?.length - 1]?._id || "",
-                            index: conversation?.messages?.length - 1 
+                            index: conversation?.messages?.length - 1
                         }
                     }
                 }

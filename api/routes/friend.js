@@ -431,9 +431,9 @@ router.post('/get_user_friends', verify, async (req, res) => {
 
     let endFor = targetUser.friends.length < index + count ? targetUser.friends.length : index + count;
     // for (let i = index; i < endFor; i++) {
-    console.log('targetUser.friends', targetUser.friends);
+    // console.log('targetUser.friends', targetUser.friends);
     thisUser.friends = thisUser.friends.filter(o => o.friend);
-    console.log('thisUser.friends', thisUser.friends);
+    // console.log('thisUser.friends', thisUser.friends);
     targetUser.friends = targetUser.friends.filter(o => o.friend);
     for (let i = 0; i < targetUser.friends.length; i++) {
       let x = targetUser.friends[i];
