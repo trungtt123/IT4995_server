@@ -41,7 +41,7 @@ var checkUserName = (userName) => {
   return new Promise((resolve, reject) => {
     if (userName.length == 0) reject('lỗi xâu rỗng');
     let str = removeAccents(userName);
-    var regex = /^[a-zA-Z][a-zA-Z_ ]*$/;
+    var regex = /^[a-zA-Z\s]+$/;
     if (regex.test(str)) resolve(userName);
     else reject('phải bắt đầu là chữ, tiếp theo là chữ hoặc gạch dưới hoặc khoảng trắng')
   })
