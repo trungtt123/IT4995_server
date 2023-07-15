@@ -286,7 +286,7 @@ router.post('/set_user_info', cpUpload, verify, async (req, res) => {
 
     if (fileAvatar) {
       if (!checkSizeImage(fileAvatar))
-        return callRes(res, responseError.FILE_SIZE_IS_TOO_BIG, 'avatar: file quá lớn, max = 4MB');
+        return callRes(res, responseError.FILE_SIZE_IS_TOO_BIG, 'avatar: file quá lớn, max = 10MB');
       if (!checkTypeImage(fileAvatar))
         return callRes(res, responseError.PARAMETER_TYPE_IS_INVALID, 'avatar: sai định dạng');
       if (user.avatar.filename) {
@@ -342,7 +342,7 @@ router.post('/set_user_info', cpUpload, verify, async (req, res) => {
     } catch (error) {
       return callRes(res, responseError.CAN_NOT_CONNECT_TO_DB, error.message);
     }
-
+    console.log('userrrrr', user);
     return callRes(res, responseError.OK, {
       avatar: user.avatar.url,
       cover_image: user.coverImage.url,
@@ -351,7 +351,8 @@ router.post('/set_user_info', cpUpload, verify, async (req, res) => {
       city: user.city,
       country: user.country,
       username: user.name,
-      description: user.description
+      description: user.description,
+      birthday: validTime.timeToSecond(user.birthday)
     });
   } catch (error) {
     return callRes(res, responseError.UNKNOWN_ERROR, error.message);
