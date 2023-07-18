@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const verify = require('../utils/verifyToken');
+const verify = require('../../utils/verifyToken');
 const jwt = require('jsonwebtoken');
-const Conversation = require('../models/Conversation');
-const User = require('../models/User');
-const convertString = require('../utils/convertString');
-const { responseError, callRes } = require('../response/error');
-const checkInput = require('../utils/validInput');
-const validTime = require('../utils/validTime');
+const Conversation = require('../../models/Conversation');
+const User = require('../../models/User');
+const convertString = require('../../utils/convertString');
+const { responseError, callRes } = require('../../response/error');
+const checkInput = require('../../utils/validInput');
+const validTime = require('../../utils/validTime');
 let socketMap = {};
 
 async function verifySocketToken(token) {
@@ -95,6 +95,7 @@ module.exports = function (socket) {
                 socket.emit('create_conversation', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
                 return;
             }
+            // cần fix, lấy userId qua token
             const user = await User.findOne({ _id: userId });
             if (!user) {
                 socket.emit('create_conversation', { code: '9999', message: 'FAILED', reason: 'USER NOT EXIST' });
@@ -356,6 +357,7 @@ module.exports = function (socket) {
                 socket.emit('new_message', { code: '9999', message: 'FAILED', reason: 'TOKEN INVALID' });
                 return;
             }
+            // cần fix userId lấy từ token
             const user = await User.findOne({ _id: userId });
             if (!user) {
                 socket.emit('new_message', { code: '9999', message: 'FAILED', reason: 'USER NOT EXIST' });
@@ -427,76 +429,76 @@ module.exports = function (socket) {
             console.log(e);
         }
     });
-    socket.on('client_get_list_conversation', async (dataSocket) => {
-        const { token, thisUserId } = dataSocket;
-        const verifyToken = await verifySocketToken(token);
-        if (!verifyToken) {
-            socket.emit('server_send_conversation', { message: 'failed', reason: 'token invalid' });
-            return;
-        }
-        const verified = jwt.verify(token, process.env.jwtSecret);
-        if (thisUserId !== verified.id) {
-            socket.emit('server_send_conversation', { message: 'failed', reason: 'token invalid' });
-            return;
-        }
-        let data = [];
-        let totalNewMessage = 0;
-        var conversations = [];
-        let conversationFirst = await Conversation.find({ firstUser: thisUserId });
-        let conversationSecond = await Conversation.find({ secondUser: thisUserId });
-        for (let conversation in conversationFirst) {
-            conversations.push(conversationFirst[conversation]);
-        }
-        for (let conversation in conversationSecond) {
-            conversations.push(conversationSecond[conversation]);
-        }
-        //console.log(conversations);
-        // let endFor = conversations.length < index + count ? conversations.length : index + count;
-        for (let i = 0; i < conversations.length; i++) {
-            let x = conversations[i];
-            if (x.conversationId == null || x.conversationId == "") {
-                continue;
-            }
-            let conversationInfo = {
-                id: null,
-                partner: {
-                    id: null,
-                    username: null,
-                    avatar: null
-                },
-                lastMessage: {
-                    message: null,
-                    created: null,
-                },
-                numNewMessage: 0
-            }
-            let partner, lastDialog;
-            if (x.firstUser == thisUserId) {
-                partner = await User.findById(x.secondUser);
-            }
-            else {
-                partner = await User.findById(x.firstUser);
-            }
-            lastDialog = x.dialog[x.dialog.length - 1];
-            conversationInfo.id = x.conversationId;
-            conversationInfo.partner.id = partner._id;
-            conversationInfo.partner.username = partner.name;
-            conversationInfo.partner.avatar = partner.avatar.url;
-            conversationInfo.lastMessage.message = lastDialog?.content;
-            conversationInfo.lastMessage.created = lastDialog?.created;
-            var numNewMessage = 0;
-            for (let j = x.dialog.length - 1; j >= 0; j--) {
-                if (x.dialog[j].unread == "1" && x.dialog[j].sender.toString() !== thisUserId) {
-                    numNewMessage += 1;
-                }
-                else break;
-            }
-            if (numNewMessage > 0) totalNewMessage += 1;
-            conversationInfo.numNewMessage = numNewMessage;
-            data.push(conversationInfo);
-        }
-        socket.emit('server_send_list_conversation', { message: 'OK', data: data, totalNewMessage: totalNewMessage });
-    });
+    // socket.on('client_get_list_conversation', async (dataSocket) => {
+    //     const { token, thisUserId } = dataSocket;
+    //     const verifyToken = await verifySocketToken(token);
+    //     if (!verifyToken) {
+    //         socket.emit('server_send_conversation', { message: 'failed', reason: 'token invalid' });
+    //         return;
+    //     }
+    //     const verified = jwt.verify(token, process.env.jwtSecret);
+    //     if (thisUserId !== verified.id) {
+    //         socket.emit('server_send_conversation', { message: 'failed', reason: 'token invalid' });
+    //         return;
+    //     }
+    //     let data = [];
+    //     let totalNewMessage = 0;
+    //     var conversations = [];
+    //     let conversationFirst = await Conversation.find({ firstUser: thisUserId });
+    //     let conversationSecond = await Conversation.find({ secondUser: thisUserId });
+    //     for (let conversation in conversationFirst) {
+    //         conversations.push(conversationFirst[conversation]);
+    //     }
+    //     for (let conversation in conversationSecond) {
+    //         conversations.push(conversationSecond[conversation]);
+    //     }
+    //     //console.log(conversations);
+    //     // let endFor = conversations.length < index + count ? conversations.length : index + count;
+    //     for (let i = 0; i < conversations.length; i++) {
+    //         let x = conversations[i];
+    //         if (x.conversationId == null || x.conversationId == "") {
+    //             continue;
+    //         }
+    //         let conversationInfo = {
+    //             id: null,
+    //             partner: {
+    //                 id: null,
+    //                 username: null,
+    //                 avatar: null
+    //             },
+    //             lastMessage: {
+    //                 message: null,
+    //                 created: null,
+    //             },
+    //             numNewMessage: 0
+    //         }
+    //         let partner, lastDialog;
+    //         if (x.firstUser == thisUserId) {
+    //             partner = await User.findById(x.secondUser);
+    //         }
+    //         else {
+    //             partner = await User.findById(x.firstUser);
+    //         }
+    //         lastDialog = x.dialog[x.dialog.length - 1];
+    //         conversationInfo.id = x.conversationId;
+    //         conversationInfo.partner.id = partner._id;
+    //         conversationInfo.partner.username = partner.name;
+    //         conversationInfo.partner.avatar = partner.avatar.url;
+    //         conversationInfo.lastMessage.message = lastDialog?.content;
+    //         conversationInfo.lastMessage.created = lastDialog?.created;
+    //         var numNewMessage = 0;
+    //         for (let j = x.dialog.length - 1; j >= 0; j--) {
+    //             if (x.dialog[j].unread == "1" && x.dialog[j].sender.toString() !== thisUserId) {
+    //                 numNewMessage += 1;
+    //             }
+    //             else break;
+    //         }
+    //         if (numNewMessage > 0) totalNewMessage += 1;
+    //         conversationInfo.numNewMessage = numNewMessage;
+    //         data.push(conversationInfo);
+    //     }
+    //     socket.emit('server_send_list_conversation', { message: 'OK', data: data, totalNewMessage: totalNewMessage });
+    // });
 }
 
 

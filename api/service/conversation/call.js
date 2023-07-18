@@ -1,5 +1,5 @@
 const rooms = {}
-const Conversation = require('../models/Conversation');
+const Conversation = require('../../models/Conversation');
 module.exports = function (socket) {
     const room = socket.handshake.query.room
 

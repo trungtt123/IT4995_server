@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const verify = require('../utils/verifyToken');
+const verify = require('../../utils/verifyToken');
 const jwt = require('jsonwebtoken');
-const Conversation = require('../models/Conversation');
-const User = require('../models/User');
-const convertString = require('../utils/convertString');
-const { responseError, callRes } = require('../response/error');
-const checkInput = require('../utils/validInput');
-const validTime = require('../utils/validTime');
+const Conversation = require('../../models/Conversation');
+const User = require('../../models/User');
+const convertString = require('../../utils/convertString');
+const { responseError, callRes } = require('../../response/error');
+const checkInput = require('../../utils/validInput');
+const validTime = require('../../utils/validTime');
 
 router.get('/get-list-conversation', verify, async (req, res) => {
     const { userId, token } = req.query;

@@ -28,19 +28,18 @@ mongoose.connect(url,
   );
 
 // use Routes
-app.use('/it4995/auth', require('./routes/auth'));
-app.use('/it4995/friend', require('./routes/friend'));
-app.use('/it4995/post', require('./routes/posts'));
-app.use('/it4995/search', require('./routes/search'));
-app.use('/it4995/comment', require('./routes/comments'));
-app.use('/it4995/like', require('./routes/likes'));
-app.use('/it4995/friend', require('./routes/friend'));
-app.use('/it4995/setting', require('./routes/settings'));
-app.use('/it4995/user', require('./routes/user'));
-app.use('/it4995/conversation', require('./routes/conversation'));
+app.use('/it4995/auth', require('./service/user/auth'));
+app.use('/it4995/friend', require('./service/friend/friend'));
+// app.use('/it4995/post', require('./routes/posts'));
+// app.use('/it4995/search', require('./routes/search'));
+// app.use('/it4995/comment', require('./routes/comments'));
+// app.use('/it4995/like', require('./routes/likes'));
+// app.use('/it4995/setting', require('./routes/settings'));
+app.use('/it4995/user', require('./service/user/user'));
+app.use('/it4995/conversation', require('./service/conversation/conversation'));
 _io.on('connection', async (socket) => {
   console.log('Connected: ' + socket.id);
-  require('./routes/chat')(socket);
+  require('./service/conversation/chat')(socket);
   socket.on('disconnect', () => {
     socket.disconnect();
 
@@ -62,6 +61,6 @@ _callIO.listen(server)
 const peers = _callIO.of('/webrtcPeer')
 
 peers.on('connection', socket => {
-  require('./routes/call')(socket);
+  require('./service/conversation/call')(socket);
   
 })

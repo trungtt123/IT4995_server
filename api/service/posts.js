@@ -54,7 +54,7 @@ function countWord(str) {
     return str.split(" ").length;
 }
 
-// @route  POST it4788/post/get_list_videos
+// @route  POST it4995/post/get_list_videos
 // @desc   get list videos
 // @access Public
 /*
@@ -165,7 +165,7 @@ router.post('/get_list_videos', async (req, res) => {
     });
 });
 
-// @route  POST it4788/post/get_list_posts
+// @route  POST it4995/post/get_list_posts
 // @desc   get list posts
 // @access Public
 /*
@@ -277,7 +277,7 @@ router.post('/get_list_posts', async (req, res) => {
     });
 });
 
-// @route  POST it4788/post/get_post
+// @route  POST it4995/post/get_post
 // @desc   get post
 // @access Private
 /*
@@ -462,7 +462,7 @@ async function deleteRemoteFile(filename) {
     await bucket.file(filename).delete();
 }
 
-// @route  POST it4788/post/add_post
+// @route  POST it4995/post/add_post
 // @desc   add new post
 // @access Public
 /*
@@ -636,7 +636,7 @@ router.post('/add_post', cpUpload, verify, async (req, res, next) => {
 });
 
 
-// @route  POST it4788/post/delete_post
+// @route  POST it4995/post/delete_post
 // @desc   delete a post
 // @access Private
 /*
@@ -734,7 +734,7 @@ router.post('/delete_post', verify, async (req, res) => {
 })
 
 
-// @route  POST it4788/post/edit_post
+// @route  POST it4995/post/edit_post
 // @desc   edit an existing post
 // @access Private
 /*
@@ -997,7 +997,7 @@ router.post('/edit_post', cpUpload, verify, async (req, res) => {
     }
 })
 
-// @route  POST it4788/post/report_post
+// @route  POST it4995/post/report_post
 // @desc   report post
 // @access Public
 /*
@@ -1078,7 +1078,7 @@ router.post('/report_post', verify, async (req, res) => {
     }
 })
 
-// @route  POST it4788/post/check_new_item
+// @route  POST it4995/post/check_new_item
 // @desc   check new item
 // @access Public
 /*

@@ -13,7 +13,7 @@ function countWord(str) {
     return str.split(" ").length;
 }
 
-// @route  POST it4788/comment/set_comment
+// @route  POST it4995/comment/set_comment
 // @desc   add new comment
 // @access Public
 router.post('/set_comment', verify, async (req, res) => {
@@ -110,7 +110,7 @@ router.post('/set_comment', verify, async (req, res) => {
     }
 });
 
-// @route  POST it4788/comment/get_comment
+// @route  POST it4995/comment/get_comment
 // @desc   add new comment
 // @access Public
 router.post('/get_comment', async (req, res) => {

@@ -2,13 +2,13 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const validInput = require('../utils/validInput');
-const verify = require('../utils/verifyToken');
-const convertString = require('../utils/convertString');
-const { responseError, callRes } = require('../response/error');
-const checkInput = require('../utils/validInput');
-const validTime = require('../utils/validTime');
-const removeAccents = require('../utils/removeAccents');
+const validInput = require('../../utils/validInput');
+const verify = require('../../utils/verifyToken');
+const convertString = require('../../utils/convertString');
+const { responseError, callRes } = require('../../response/error');
+const checkInput = require('../../utils/validInput');
+const validTime = require('../../utils/validTime');
+const removeAccents = require('../../utils/removeAccents');
 
 
 var multer = require('multer');
@@ -18,7 +18,7 @@ const MAX_SIZE_IMAGE = 4 * 1024 * 1024; // for 4MB
 
 
 // Create a bucket associated to Firebase storage bucket
-const { bucket } = require('./firebase');
+const { bucket } = require('../firebase');
 
 // Initiating a memory storage engine to store files as Buffer objects
 const uploader = multer({
@@ -26,16 +26,16 @@ const uploader = multer({
 });
 
 // Item Model
-const User = require("../models/User");
-const Setting = require("../models/Setting");
-const verifyToken = require('../utils/verifyToken');
-const LCS = require('../utils/LCS');
+const User = require("../../models/User");
+const Setting = require("../../models/Setting");
+const verifyToken = require('../../utils/verifyToken');
+const LCS = require('../../utils/LCS');
 
-// @route  POST it4788/signup
+// @route  POST it4995/signup
 // @desc   Register new user
 // @access Public
 // Example: Use Postman
-// URL: http://127.0.0.1:5000/it4788/signup
+// URL: http://127.0.0.1:5000/it4995/signup
 // BODY: {
 // "phonenumber": "0789554152",
 // "password": "nguyen123"
@@ -149,7 +149,7 @@ router.post('/signup', async (req, res) => {
 })
 
 
-// @route  POST it4788/get_verify_code
+// @route  POST it4995/get_verify_code
 // @desc   get verified code
 // @access Public
 router.post('/get_verify_code', async (req, res) => {
@@ -203,7 +203,7 @@ router.post('/get_verify_code', async (req, res) => {
 });
 
 
-// @route  POST it4788/check_verify_code
+// @route  POST it4995/check_verify_code
 // @desc   check verified code
 // @access Public
 router.post('/check_verify_code', async (req, res) => {
@@ -269,7 +269,7 @@ router.post('/check_verify_code', async (req, res) => {
 });
 
 
-// @route  POST it4788/login
+// @route  POST it4995/login
 // @desc   login
 // @access Public
 router.post('/login', async (req, res) => {
@@ -381,7 +381,7 @@ router.post("/change_password", verifyToken, async (req, res) => {
     })
   })
 });
-// @route  POST it4788/logout
+// @route  POST it4995/logout
 // @desc   logout
 // @access Public
 router.post("/logout", verify, async (req, res) => {

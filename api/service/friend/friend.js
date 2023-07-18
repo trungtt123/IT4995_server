@@ -1,17 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const User = require('../models/User');
-const verify = require('../utils/verifyToken');
-const convertString = require('../utils/convertString');
-const { responseError, callRes } = require('../response/error');
-const checkInput = require('../utils/validInput');
-const validTime = require('../utils/validTime');
+const User = require('../../models/User');
+const verify = require('../../utils/verifyToken');
+const convertString = require('../../utils/convertString');
+const { responseError, callRes } = require('../../response/error');
+const checkInput = require('../../utils/validInput');
+const validTime = require('../../utils/validTime');
 const MAX_FRIEND_NUMBER = 500;
-// @route  POST it4788/friend/get_requested_friends
+// @route  POST it4995/friend/get_requested_friends
 // @access Public
 // Example: Use Postman
-// URL: http://127.0.0.1:5000/it4788/friend/get_requested_friends
+// URL: http://127.0.0.1:5000/it4995/friend/get_requested_friends
 // -------------------------
 // index : last addElement
 // count: length of data
@@ -91,10 +91,10 @@ router.post('/get_requested_friends', verify, async (req, res) => {
 })
 
 
-// @route  POST it4788/friend/set_request_friend
+// @route  POST it4995/friend/set_request_friend
 // @access Public
 // Example: Use Postman
-// URL: http://127.0.0.1:5000/it4788/friend/set_request_friend
+// URL: http://127.0.0.1:5000/it4995/friend/set_request_friend
 // BODY:
 // {
 //   "token": "xxxxx",
@@ -239,10 +239,10 @@ router.post("/set_block", verify, async (req, res) => {
   }
 });
 
-// @route  POST it4788/friend/set_accept_friend
+// @route  POST it4995/friend/set_accept_friend
 // @access Public
 // Example: Use Postman
-// URL: http://127.0.0.1:5000/it4788/friend/set_accept_friend
+// URL: http://127.0.0.1:5000/it4995/friend/set_accept_friend
 // BODY:
 // {
 //   "token": "xxxxx",
@@ -381,10 +381,10 @@ router.post("/get_list_blocks", verify, async (req, res) => {
   return callRes(res, responseError.OK, data);
 });
 
-// @route  POST it4788/friend/get_user_friends
+// @route  POST it4995/friend/get_user_friends
 // @access Public
 // Example: Use Postman
-// URL: http://127.0.0.1:5000/it4788/friend/get_user_friends
+// URL: http://127.0.0.1:5000/it4995/friend/get_user_friends
 // BODY:
 // {
 //   "token": "xxxxx",
