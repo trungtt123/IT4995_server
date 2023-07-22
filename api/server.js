@@ -27,6 +27,10 @@ mongoose.connect(url,
   .catch(err => console.log(`errors: ${err}`)
   );
 
+
+app.get('/privacy-policy', (req, res) => {
+  res.sendFile(__dirname + '/public/index.html'); // Thay đổi đường dẫn tới trang HTML của bạn
+});
 // use Routes
 app.use('/it4995/auth', require('./routes/auth'));
 app.use('/it4995/friend', require('./routes/friend'));
