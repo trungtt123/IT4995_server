@@ -97,6 +97,11 @@ router.post('/signup', async (req, res) => {
   if (typeof phoneNumber != 'string' || typeof password != 'string' || typeof name != 'string') {
     return callRes(res, responseError.PARAMETER_TYPE_IS_INVALID, 'phoneNumber, password, name');
   }
+  let inputError;
+  await validInput.checkUserName(name)
+    .then(result => console.log(result, ' passed!'))
+    .catch(err => inputError = err)
+  if (inputError) return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'username khong hop le');
   if (!validInput.checkPhoneNumber(phoneNumber)) {
     return callRes(res, responseError.PARAMETER_VALUE_IS_INVALID, 'phoneNumber');
   }
